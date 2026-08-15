@@ -370,3 +370,6 @@ FodyWeavers.xsd
 repomix-output.xml
 repomix-output-BE.xml
 repomix-output-pharmalink.xml
+
+appsettings.json
+appsettings.Development.json
