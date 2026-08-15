@@ -25,12 +25,13 @@ var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<stri
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowReactApp",
-        corsBuilder => corsBuilder
-            .WithOrigins(allowedOrigins)
-            .AllowAnyMethod()
-            .AllowAnyHeader()
-            .AllowCredentials());
+    options.AddPolicy("AllowReactApp", policy =>
+    {
+        policy.SetIsOriginAllowed(_ => true) // Accepts requests from any frontend domain (Vercel, Localhost, etc.)
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials();
+    });
 });
 
 // Configure Swagger to allow JWT Input
