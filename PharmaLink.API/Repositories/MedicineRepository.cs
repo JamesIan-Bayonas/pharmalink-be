@@ -34,47 +34,47 @@ namespace PharmaLink.API.Repositories
         {
             using var connection = new NpgsqlConnection(_connectionString);
 
-            var sqlBuilder = new System.Text.StringBuilder("SELECT * FROM Medicines WHERE 1=1 ");
+            var sqlBuilder = new System.Text.StringBuilder(@"SELECT * FROM ""Medicines"" WHERE 1=1 ");
             var dbParams = new DynamicParameters();
 
             if (!string.IsNullOrWhiteSpace(parameters.SearchTerm))
             {
-                sqlBuilder.Append(" AND Name LIKE @SearchTerm");
+                sqlBuilder.Append(@" AND ""Name"" ILIKE @SearchTerm");
                 dbParams.Add("SearchTerm", $"%{parameters.SearchTerm}%");
             }
 
             if (parameters.CategoryId.HasValue)
             {
-                sqlBuilder.Append(" AND CategoryId = @CategoryId");
+                sqlBuilder.Append(@" AND ""CategoryId"" = @CategoryId");
                 dbParams.Add("CategoryId", parameters.CategoryId.Value);
             }
 
             if (!string.IsNullOrWhiteSpace(parameters.Filter))
             {
-                if (parameters.Filter.ToLower() == "low")
+                if (parameters.Filter.Equals("low", StringComparison.OrdinalIgnoreCase))
                 {
-                    sqlBuilder.Append(" AND StockQuantity <= 10");
+                    sqlBuilder.Append(@" AND ""StockQuantity"" <= 10");
                 }
-                else if (parameters.Filter.ToLower() == "expiring")
+                else if (parameters.Filter.Equals("expiring", StringComparison.OrdinalIgnoreCase))
                 {
-                    sqlBuilder.Append(" AND ExpiryDate <= DATEADD(day, 90, GETDATE())");
+                    sqlBuilder.Append(@" AND ""ExpiryDate"" <= (CURRENT_DATE + INTERVAL '90 days')");
                 }
             }
 
             string sortQuery = parameters.SortBy?.ToLower() switch
             {
-                "price" => "ORDER BY Price ASC",
-                "price_desc" => "ORDER BY Price DESC",
-                "expiry" => "ORDER BY ExpiryDate ASC",
-                "name_desc" => "ORDER BY Name DESC",
-                _ => "ORDER BY Name ASC"
+                "price" => @"ORDER BY ""Price"" ASC",
+                "price_desc" => @"ORDER BY ""Price"" DESC",
+                "expiry" => @"ORDER BY ""ExpiryDate"" ASC",
+                "name_desc" => @"ORDER BY ""Name"" DESC",
+                _ => @"ORDER BY ""Name"" ASC"
             };
 
             string whereClause = sqlBuilder.ToString().Substring(sqlBuilder.ToString().IndexOf("WHERE"));
-            string countSql = $"SELECT COUNT(*) FROM Medicines {whereClause}";
+            string countSql = $@"SELECT COUNT(*) FROM ""Medicines"" {whereClause}";
 
             sqlBuilder.Append($" {sortQuery}");
-            sqlBuilder.Append(" OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY");
+            sqlBuilder.Append(@" LIMIT @PageSize OFFSET @Offset");
 
             dbParams.Add("Offset", (parameters.PageNumber - 1) * parameters.PageSize);
             dbParams.Add("PageSize", parameters.PageSize);
