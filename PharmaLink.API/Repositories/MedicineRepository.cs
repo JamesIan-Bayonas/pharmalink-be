@@ -15,17 +15,17 @@ namespace PharmaLink.API.Repositories
 
         public async Task<Medicine?> GetByIdAsync(int id)
         {
-            using var connection = new NpgsqlConnection (_connectionString);
-            string sql = "SELECT * FROM Medicines WHERE Id = @Id";
+            using var connection = new NpgsqlConnection(_connectionString);
+            const string sql = @"SELECT * FROM ""Medicines"" WHERE ""Id"" = @Id";
             return await connection.QuerySingleOrDefaultAsync<Medicine>(sql, new { Id = id });
         }
 
         public async Task<Medicine?> GetByNameAsync(string name)
         {
             using var connection = new NpgsqlConnection(_connectionString);
-            string sql = @"
-                SELECT * FROM Medicines 
-                WHERE LOWER(LTRIM(RTRIM(Name))) = LOWER(LTRIM(RTRIM(@Name)))";
+            const string sql = @"
+                SELECT * FROM ""Medicines"" 
+                WHERE LOWER(TRIM(""Name"")) = LOWER(TRIM(@Name))";
 
             return await connection.QuerySingleOrDefaultAsync<Medicine>(sql, new { Name = name });
         }
@@ -88,17 +88,17 @@ namespace PharmaLink.API.Repositories
         public async Task<int> CreateAsync(Medicine medicine)
         {
             using var connection = new NpgsqlConnection(_connectionString);
-            string sql = @"
-                INSERT INTO Medicines (CategoryId, Name, Description, StockQuantity, Price, ExpiryDate)
-                VALUES (@CategoryId, @Name, @Description, @StockQuantity, @Price, @ExpiryDate);
-                SELECT LASTVAL();";
+            const string sql = @"
+                INSERT INTO ""Medicines"" (""CategoryId"", ""Name"", ""Description"", ""StockQuantity"", ""Price"", ""ExpiryDate"")
+                VALUES (@CategoryId, @Name, @Description, @StockQuantity, @Price, @ExpiryDate)
+                RETURNING ""Id"";";
             return await connection.QuerySingleAsync<int>(sql, medicine);
         }
 
         // Align signature with nullable IDbTransaction? contract
         public async Task<bool> UpdateStockAsync(int id, int quantityDeducted, IDbTransaction? transaction = null)
         {
-            string sql = "UPDATE Medicines SET StockQuantity = StockQuantity - @Quantity WHERE Id = @Id";
+            const string sql = @"UPDATE ""Medicines"" SET ""StockQuantity"" = ""StockQuantity"" - @Quantity WHERE ""Id"" = @Id";
             var parameters = new { Quantity = quantityDeducted, Id = id };
 
             if (transaction != null)
@@ -117,15 +117,15 @@ namespace PharmaLink.API.Repositories
         public async Task<bool> UpdateAsync(Medicine medicine)
         {
             using var connection = new NpgsqlConnection(_connectionString);
-            string sql = @"
-                UPDATE Medicines 
-                SET Name = @Name, 
-                    Description = @Description,
-                    CategoryId = @CategoryId, 
-                    StockQuantity = @StockQuantity, 
-                    Price = @Price, 
-                    ExpiryDate = @ExpiryDate
-                    WHERE Id = @Id";
+            const string sql = @"
+                UPDATE ""Medicines"" 
+                SET ""Name"" = @Name, 
+                    ""Description"" = @Description,
+                    ""CategoryId"" = @CategoryId, 
+                    ""StockQuantity"" = @StockQuantity, 
+                    ""Price"" = @Price, 
+                    ""ExpiryDate"" = @ExpiryDate
+                WHERE ""Id"" = @Id";
 
             var rows = await connection.ExecuteAsync(sql, medicine);
             return rows > 0;
@@ -134,7 +134,7 @@ namespace PharmaLink.API.Repositories
         public async Task<bool> DeleteAsync(int id)
         {
             using var connection = new NpgsqlConnection(_connectionString);
-            string sql = "DELETE FROM Medicines WHERE Id = @Id";
+            const string sql = @"DELETE FROM ""Medicines"" WHERE ""Id"" = @Id";
 
             var rows = await connection.ExecuteAsync(sql, new { Id = id });
             return rows > 0;
